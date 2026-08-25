@@ -1,14 +1,21 @@
 import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useSearchParams } from 'react-router'
-import { addToPastes, updateToPastes } from '../redux/pasteSlice';
+import { addToPastes, updateToPastes, fetchPastes } from '../redux/pasteSlice';
 import toast from 'react-hot-toast';
 
 const ViewPastes = () => {
 
-  const {id} = useParams();
+  const { id } = useParams();
+  const dispatch = useDispatch();
   const allPastes = useSelector((state) => state.paste.pastes);
   const paste = allPastes.filter((p) => p._id === id)[0];
+
+
+  useEffect(() => {
+    dispatch(fetchPastes());
+  }, [dispatch]);
+
 
   if (!paste) {
     return (
@@ -32,12 +39,12 @@ const ViewPastes = () => {
 
         <button
           className='px-5 py-3 rounded-lg bg-brass hover:bg-brass-dark text-ink font-display font-medium transition-colors whitespace-nowrap'
-          onClick={ () => {
+          onClick={() => {
             navigator.clipboard.writeText(paste?.content);
             toast.success("copied to clipboard");
           }}>
           Copy
-        </button> 
+        </button>
       </div>
 
       <div>

@@ -1,6 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { removeFromPastes } from '../redux/pasteSlice';
+import { removeFromPastes, fetchPastes } from '../redux/pasteSlice';
 import toast from 'react-hot-toast';
 import { NavLink } from 'react-router';
 
@@ -10,6 +10,10 @@ const Pastes = () => {
   const [shareUrl, setShareUrl] = useState(null);
   const pastes = useSelector((state) => state.paste.pastes);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchPastes());
+  }, [dispatch]);
 
   const filteredData = pastes.filter((paste) => paste.title.toLowerCase().includes(searchTerm.toLowerCase()));
 
@@ -27,7 +31,7 @@ const Pastes = () => {
     toast.success("link copied to clipboard");
   }
 
-  function dateFormat(date){
+  function dateFormat(date) {
     const formatted = new Date(date).toLocaleString("en-US", {
       month: "short",
       day: "numeric",
@@ -80,15 +84,15 @@ const Pastes = () => {
                       <NavLink to={`/pastes/${paste?._id}`}>View</NavLink>
                     </button>
 
-                    <button 
+                    <button
                       onClick={() => handleDelete(paste?._id)}
                       className='text-rust hover:text-rust/70 ml-auto'
                     >
                       Delete
                     </button>
 
-                    <button 
-                      onClick={ () => {
+                    <button
+                      onClick={() => {
                         navigator.clipboard.writeText(paste?.content);
                         toast.success("copied to clipboard");
                       }}
@@ -114,7 +118,7 @@ const Pastes = () => {
           )
         }
       </div>
-      
+
       {
         shareUrl &&
         <div
