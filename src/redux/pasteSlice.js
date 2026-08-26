@@ -1,7 +1,8 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import toast from 'react-hot-toast';
 
-const API_URL = `${import.meta.env.VITE_API_URL}/api/pastes`;
+const BASE_URL = import.meta.env.VITE_API_URL.replace(/\/$/, '');
+const API_URL = `${BASE_URL}/api/pastes`;
 
 const authHeader = (getState) => ({
   'Content-Type': 'application/json',

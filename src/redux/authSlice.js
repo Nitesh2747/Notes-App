@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
-const API_URL = `${import.meta.env.VITE_API_URL}/api/auth`;
+const BASE_URL = import.meta.env.VITE_API_URL.replace(/\/$/, '');
+const API_URL = `${BASE_URL}/api/auth`;
 
 export const signup = createAsyncThunk('auth/signup', async ({ username, password }, { rejectWithValue }) => {
     try {
