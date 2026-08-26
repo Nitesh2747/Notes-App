@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { removeFromPastes, fetchPastes } from '../redux/pasteSlice';
+import { removeFromPastes, fetchPastes, updateToPastes, toggleShare } from '../redux/pasteSlice';
 import toast from 'react-hot-toast';
 import { NavLink } from 'react-router';
 
 const Pastes = () => {
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [shareUrl, setShareUrl] = useState(null);
   const pastes = useSelector((state) => state.paste.pastes);
   const dispatch = useDispatch();
+  const [sharingPaste, setSharingPaste] = useState(null);
+  const shareUrl = sharingPaste ? `${window.location.origin}/share/${sharingPaste._id}` : null;
 
   useEffect(() => {
     dispatch(fetchPastes());
@@ -21,9 +22,22 @@ const Pastes = () => {
     dispatch(removeFromPastes(pasteId));
   }
 
-  function handleShare(pasteId) {
-    const url = `${window.location.origin}/pastes/${pasteId}`;
-    setShareUrl(url);
+  async function handleShare(paste) {
+    if (paste.isPublic) {
+      setSharingPaste(paste);
+      return;
+    }
+    const result = await dispatch(toggleShare({ pasteId: paste._id, isPublic: true }));
+    if (toggleShare.fulfilled.match(result)) {
+      setSharingPaste(result.payload);
+    }
+  }
+
+  async function handleStopSharing() {
+    const result = await dispatch(toggleShare({ pasteId: sharingPaste._id, isPublic: false }));
+    if (toggleShare.fulfilled.match(result)) {
+      setSharingPaste(null);
+    }
   }
 
   function copyShareUrl() {
@@ -102,7 +116,7 @@ const Pastes = () => {
                     </button>
 
                     <button
-                      onClick={() => handleShare(paste?._id)}
+                      onClick={() => handleShare(paste)}
                       className='text-ink/70 hover:text-brass-dark'
                     >
                       Share
@@ -123,7 +137,7 @@ const Pastes = () => {
         shareUrl &&
         <div
           className='fixed inset-0 bg-ink/80 flex items-center justify-center px-6 z-20'
-          onClick={() => setShareUrl(null)}
+          onClick={() => setSharingPaste(null)}
         >
           <div
             className='bg-paper rounded-lg p-6 w-full max-w-md'
@@ -149,13 +163,20 @@ const Pastes = () => {
                 Copy
               </button>
             </div>
-
+            
             <button
-              onClick={() => setShareUrl(null)}
+              onClick={handleStopSharing}
+              className='mt-4 text-xs text-rust hover:text-rust/70 font-display uppercase tracking-wide mr-4'
+            >
+              Stop Sharing
+            </button>
+            <button
+              onClick={() => setSharingPaste(null)}
               className='mt-4 text-xs text-ink/50 hover:text-ink font-display uppercase tracking-wide'
             >
               Close
             </button>
+
           </div>
         </div>
       }

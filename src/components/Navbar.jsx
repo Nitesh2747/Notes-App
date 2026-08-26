@@ -32,7 +32,7 @@ const Navbar = () => {
             }`
           }
         >
-          New
+          Create
         </NavLink>
 
         <NavLink
@@ -42,7 +42,7 @@ const Navbar = () => {
             }`
           }
         >
-          Pastes
+          View
         </NavLink>
 
         {username && (
@@ -65,4 +65,3 @@ const Navbar = () => {
 }
 
 export default Navbar
-

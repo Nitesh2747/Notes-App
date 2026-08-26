@@ -40,12 +40,13 @@ export const updateToPastes = createAsyncThunk('paste/updateToPastes', async (pa
     const res = await fetch(`${API_URL}/${paste._id}`, {
       method: 'PUT',
       headers: authHeader(getState),
-      body: JSON.stringify({ title: paste.title, content: paste.content }),
+      body: JSON.stringify({ title: paste.title, content: paste.content, isPublic: paste.isPublic }),
     });
     const data = await res.json();
     if (!res.ok) return rejectWithValue(data.message);
     return data;
-  } catch (err) {
+  }
+  catch (err) {
     return rejectWithValue(err.message);
   }
 });
@@ -59,14 +60,46 @@ export const removeFromPastes = createAsyncThunk('paste/removeFromPastes', async
     const data = await res.json();
     if (!res.ok) return rejectWithValue(data.message);
     return pasteId;
-  } catch (err) {
+  }
+  catch (err) {
     return rejectWithValue(err.message);
   }
 });
 
+export const fetchPublicPaste = createAsyncThunk('paste/fetchPublicPaste', async (pasteId, { rejectWithValue }) => {
+  try {
+    const res = await fetch(`${API_URL}/public/${pasteId}`);
+    const data = await res.json();
+    if (!res.ok) return rejectWithValue(data.message);
+    return data;
+  }
+  catch (err) {
+    return rejectWithValue(err.message);
+  }
+});
+
+export const toggleShare = createAsyncThunk('paste/toggleShare', async ({ pasteId, isPublic }, { getState, rejectWithValue }) => {
+  try {
+    const res = await fetch(`${API_URL}/${pasteId}`, {
+      method: 'PUT',
+      headers: authHeader(getState),
+      body: JSON.stringify({ isPublic }),
+    });
+    const data = await res.json();
+    if (!res.ok) return rejectWithValue(data.message);
+    return data;
+  }
+  catch (err) {
+    return rejectWithValue(err.message);
+  }
+});
+
+
 const initialState = {
   pastes: [],
   status: 'idle',
+  publicPaste: null,
+  publicStatus: 'idle',
 }
 
 export const pasteSlice = createSlice({
@@ -111,6 +144,26 @@ export const pasteSlice = createSlice({
       })
       .addCase(removeFromPastes.rejected, (state, action) => {
         toast.error(action.payload || 'Failed to delete note');
+      })
+      .addCase(fetchPublicPaste.pending, (state) => {
+        state.publicStatus = 'loading';
+        state.publicPaste = null;
+      })
+      .addCase(fetchPublicPaste.fulfilled, (state, action) => {
+        state.publicStatus = 'succeeded';
+        state.publicPaste = action.payload;
+      })
+      .addCase(fetchPublicPaste.rejected, (state) => {
+        state.publicStatus = 'failed';
+        state.publicPaste = null;
+      })
+      .addCase(toggleShare.fulfilled, (state, action) => {
+        const index = state.pastes.findIndex((item) => item._id === action.payload._id);
+        if (index >= 0) state.pastes[index] = action.payload;
+        toast.success(action.payload.isPublic ? 'Sharing enabled' : 'Sharing disabled');
+      })
+      .addCase(toggleShare.rejected, (state, action) => {
+        toast.error(action.payload || 'Failed to update sharing');
       });
   },
 })

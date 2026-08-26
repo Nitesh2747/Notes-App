@@ -6,7 +6,7 @@ import ViewPastes from './components/ViewPastes';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
-
+import PublicPaste from './components/PublicPaste';
 
 const router = createBrowserRouter(
   [
@@ -48,6 +48,10 @@ const router = createBrowserRouter(
     {
       path: "/signup",
       element: <Signup />
+    },
+    {
+      path: "/share/:id",
+      element: <PublicPaste />
     },
   ]
 );
