@@ -19,9 +19,15 @@ const Navbar = () => {
 
   return (
     <nav className='sticky top-0 z-10 flex flex-wrap items-center justify-between gap-y-2 px-4 sm:px-8 py-3 sm:py-4 bg-ink-soft border-b border-brass-dark/40'>
-      <span className='font-display text-lg sm:text-xl tracking-tight text-paper'>
-        Notes<span className='text-brass'>.</span>
-      </span>
+      <div>
+        <NavLink
+          to='/'
+        >
+          <span className='font-display text-lg sm:text-xl tracking-tight text-paper'>
+            Notes<span className='text-brass'>.</span>
+          </span>
+        </NavLink>
+      </div>
 
       <div className='flex flex-row flex-wrap items-center gap-3 sm:gap-8'>
 
@@ -47,7 +53,7 @@ const Navbar = () => {
 
         {username && (
           <div className='flex items-center gap-2 sm:gap-4 pl-3 sm:pl-6 ml-0 sm:ml-2 border-l border-brass-dark/40'>
-             <span className='hidden sm:inline text-sm text-graphite'>
+            <span className='hidden sm:inline text-sm text-graphite'>
               {username}
             </span>
             <button

@@ -25,7 +25,7 @@ export const addToPastes = createAsyncThunk('paste/addToPastes', async (paste, {
     const res = await fetch(API_URL, {
       method: 'POST',
       headers: authHeader(getState),
-      body: JSON.stringify({ title: paste.title, content: paste.content }),
+      body: JSON.stringify({ title: paste.title, content: paste.content, tags: paste.tags }),
     });
     const data = await res.json();
     if (!res.ok) return rejectWithValue(data.message);
@@ -40,11 +40,11 @@ export const updateToPastes = createAsyncThunk('paste/updateToPastes', async (pa
     const res = await fetch(`${API_URL}/${paste._id}`, {
       method: 'PUT',
       headers: authHeader(getState),
-      body: JSON.stringify({ title: paste.title, content: paste.content, isPublic: paste.isPublic }),
+      body: JSON.stringify({ title: paste.title, content: paste.content, tags: paste.tags, isPublic: paste.isPublic }),
     });
     const data = await res.json();
     if (!res.ok) return rejectWithValue(data.message);
-    return data;
+    return { ...data, silent: paste.silent };
   }
   catch (err) {
     return rejectWithValue(err.message);
@@ -94,7 +94,6 @@ export const toggleShare = createAsyncThunk('paste/toggleShare', async ({ pasteI
   }
 });
 
-
 const initialState = {
   pastes: [],
   status: 'idle',
@@ -132,7 +131,9 @@ export const pasteSlice = createSlice({
       .addCase(updateToPastes.fulfilled, (state, action) => {
         const index = state.pastes.findIndex((item) => item._id === action.payload._id);
         if (index >= 0) state.pastes[index] = action.payload;
-        toast.success('Note updated');
+        if (!action.payload.silent) {
+          toast.success('Note updated');
+        }
       })
       .addCase(updateToPastes.rejected, (state, action) => {
         toast.error(action.payload || 'Failed to update note');

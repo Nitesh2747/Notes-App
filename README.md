@@ -1,14 +1,18 @@
 # Notes App
 
-A full-stack notes (paste) application with per-user accounts and optional public sharing — notes are stored in the cloud, not the browser, so you can access them from any device.
+A full-stack notes (paste) application with per-user accounts, Markdown support, and optional public sharing — notes are stored in the cloud, not the browser, so you can access them from any device.
 
 **Live app:** [Notes App](https://notes-app-pw.vercel.app)
 **Backend repo:** [Notes-App-Backend](https://github.com/Nitesh2747/Notes-App-Backend)
 
 ## Features
 
-- **Create, edit, delete, and search notes** — a clean writing/paste interface
-- **User accounts** — signup/login with hashed passwords and JWT-based sessions
+- **Create, edit, delete, and search notes** — search covers both titles and content
+- **Markdown support** — headings, bold, strikethrough, ordered/unordered lists, task checkboxes, blockquotes, inline and fenced code blocks, tables, and links, all rendered on view
+- **Tags** — organize notes with tags, click any tag to filter your list
+- **Sorting** — newest, oldest, or alphabetical (A–Z / Z–A)
+- **Debounced autosave** — edits to an existing note save automatically a moment after you stop typing, alongside an explicit save button
+- **User accounts** — signup/login with hashed passwords, JWT-based sessions, case-insensitive usernames, and a show/hide password toggle
 - **Private by default** — every note is scoped to your account only
 - **Public sharing** — opt in to generate a shareable read-only link for any note; revoke access at any time
 - **No local storage** — all data is fetched from and persisted to a live database, so your notes follow you across devices
@@ -20,12 +24,14 @@ A full-stack notes (paste) application with per-user accounts and optional publi
 - Redux Toolkit — state management, async thunks for all API calls
 - React Router — client-side routing, including protected routes
 - Tailwind CSS
+- react-markdown + remark-gfm — Markdown rendering with GitHub-flavored extras (tables, task lists, strikethrough)
 - react-hot-toast — notifications
 
 **Backend** (see [Notes-App-Backend](https://github.com/Nitesh2747/Notes-App-Backend) for full details)
 - Node.js / Express
 - MongoDB Atlas + Mongoose
 - JWT authentication, bcrypt password hashing
+- Rate limiting on auth routes
 
 **Deployment**
 - Frontend: [Vercel](https://vercel.com)
@@ -86,7 +92,15 @@ Set `VITE_API_URL` as an environment variable in your Vercel project settings, p
 
 ```
 src/
-├── components/       # Page and UI components (Home, Pastes, ViewPastes, PublicPaste, Login, Signup, Navbar, ProtectedRoute)
+├── components/
+│   ├── Home.jsx          # Create/edit note, tags, Markdown guide, autosave
+│   ├── Pastes.jsx        # Notes list — search, tag filter, sort
+│   ├── ViewPastes.jsx    # Read-only note view (Markdown rendered)
+│   ├── PublicPaste.jsx   # Public share view (no auth required)
+│   ├── NoteMarkdown.jsx  # Shared Markdown renderer used by ViewPastes/PublicPaste
+│   ├── Login.jsx / Signup.jsx
+│   ├── Navbar.jsx
+│   └── ProtectedRoute.jsx
 ├── redux/            # Redux slices (authSlice, pasteSlice) and async thunks for the API
 ├── store.js          # Redux store configuration
 └── App.jsx           # Routes

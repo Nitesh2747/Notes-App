@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams, useSearchParams } from 'react-router'
-import { addToPastes, updateToPastes, fetchPastes } from '../redux/pasteSlice';
+import { useParams } from 'react-router'
+import { fetchPastes } from '../redux/pasteSlice';
 import toast from 'react-hot-toast';
+import NoteMarkdown from './NoteMarkdown';
 
 const ViewPastes = () => {
 
@@ -34,7 +35,6 @@ const ViewPastes = () => {
           placeholder='enter title here'
           disabled
           value={paste.title}
-          onChange={(e) => (setTitle(e.target.value))}
         />
 
         <button
@@ -47,15 +47,8 @@ const ViewPastes = () => {
         </button>
       </div>
 
-      <div>
-        <textarea
-          className='w-full mt-6 rounded-lg p-5 bg-ink-soft text-paper font-mono-paste text-sm leading-relaxed border border-brass-dark/30 resize-none'
-          value={paste.content}
-          placeholder='enter content here'
-          disabled
-          onChange={(e) => setValue(e.target.value)}
-          rows={20}
-        />
+      <div className='w-full mt-6 rounded-lg p-5 bg-ink-soft border border-brass-dark/30 text-paper font-mono-paste text-sm leading-relaxed'>
+        <NoteMarkdown content={paste.content} />
       </div>
     </div>
   )

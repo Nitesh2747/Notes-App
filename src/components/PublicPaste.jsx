@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router'
 import { fetchPublicPaste } from '../redux/pasteSlice';
 import toast from 'react-hot-toast';
+import NoteMarkdown from './NoteMarkdown';
 
 const PublicPaste = () => {
     const { id } = useParams();
@@ -49,12 +50,9 @@ const PublicPaste = () => {
                 </button>
             </div>
 
-            <textarea
-                className='w-full mt-6 rounded-lg p-5 bg-ink-soft text-paper font-mono-paste text-sm leading-relaxed border border-brass-dark/30 resize-none'
-                value={publicPaste.content}
-                disabled
-                rows={20}
-            />
+            <div className='w-full mt-6 rounded-lg p-5 bg-ink-soft text-paper font-mono-paste text-sm leading-relaxed border border-brass-dark/30'>
+                <NoteMarkdown content={publicPaste.content} />
+            </div>
         </div>
     )
 }
