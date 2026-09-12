@@ -61,15 +61,23 @@ const Home = () => {
     return () => clearTimeout(timer);
   }, [title, value, tags]);
 
-  function handleAddTag(e) {
-    if (e.key !== 'Enter') return;
-    e.preventDefault();
+  function addCurrentTag() {
     const newTag = tagInput.trim().toLowerCase();
     if (newTag && !tags.includes(newTag)) {
       setTags([...tags, newTag]);
       setIsDirty(true);
     }
     setTagInput('');
+  }
+
+  function handleAddTag(e) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    addCurrentTag();
+  }
+
+  function handleAddTagButton() {
+    addCurrentTag();
   }
 
   function handleRemoveTag(tagToRemove) {
@@ -130,14 +138,23 @@ const Home = () => {
       </div>
 
       <div className='mt-4'>
-        <input
-          className='w-full px-4 py-2 rounded-lg bg-paper text-ink placeholder-graphite font-display border border-transparent focus:border-brass focus:outline-none transition-colors text-sm inline-48'
-          type='text'
-          placeholder='add tags, press enter'
-          value={tagInput}
-          onChange={(e) => setTagInput(e.target.value)}
-          onKeyDown={handleAddTag}
-        />
+        <div className='flex gap-2'>
+          <input
+            className='px-4 py-2 rounded-lg bg-paper text-ink placeholder-graphite font-display border border-transparent focus:border-brass focus:outline-none transition-colors text-sm'
+            type='text'
+            placeholder='add tags, press enter'
+            value={tagInput}
+            onChange={(e) => setTagInput(e.target.value)}
+            onKeyDown={handleAddTag}
+          />
+          <button
+            type='button'
+            onClick={handleAddTagButton}
+            className='px-4 py-2 rounded-lg bg-ink-soft text-paper text-sm border border-brass-dark/30 hover:border-brass transition-colors whitespace-nowrap'
+          >
+            Add
+          </button>
+        </div>
         {tags.length > 0 && (
           <div className='flex flex-wrap gap-2 mt-2'>
             {tags.map((tag) => (
@@ -188,14 +205,10 @@ const Home = () => {
 
       <div>
         <textarea
-          className='w-full mt-6 rounded-lg p-5 bg-ink-soft text-paper font-mono-paste text-sm leading-relaxed border border-brass-dark/30 focus:border-brass focus:outline-none resize-none transition-colors min-h-[40vh] sm:min-h-[50vh]'
+          className='w-full mt-6 rounded-lg p-5 bg-ink-soft text-paper font-mono-paste text-sm leading-relaxed border border-brass-dark/30 focus:border-brass focus:outline-none resize-none transition-colors min-h-[40vh] sm:min-h-[50vh] [font-variant-ligatures:none]'
           value={value}
           placeholder='enter content here'
           onChange={(e) => { setValue(e.target.value); setIsDirty(true); }}
-          autoCorrect='off'
-          autoCapitalize='off'
-          autoComplete='off'
-          spellCheck='false'
         />
       </div>
     </div>
