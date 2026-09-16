@@ -13,7 +13,7 @@ export const signup = createAsyncThunk('auth/signup', async ({ username, passwor
         const data = await res.json();
         if (!res.ok) return rejectWithValue(data.message);
         return data;
-    } 
+    }
     catch (err) {
         return rejectWithValue(err.message);
     }
@@ -29,8 +29,26 @@ export const login = createAsyncThunk('auth/login', async ({ username, password 
         const data = await res.json();
         if (!res.ok) return rejectWithValue(data.message);
         return data;
-    } 
+    }
     catch (err) {
+        return rejectWithValue(err.message);
+    }
+});
+
+export const deleteAccount = createAsyncThunk('auth/deleteAccount', async (password, { getState, rejectWithValue }) => {
+    try {
+        const res = await fetch(`${API_URL}/delete-account`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${getState().auth.token}`,
+            },
+            body: JSON.stringify({ password }),
+        });
+        const data = await res.json();
+        if (!res.ok) return rejectWithValue(data.message);
+        return data;
+    } catch (err) {
         return rejectWithValue(err.message);
     }
 });
@@ -53,8 +71,8 @@ const authSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(signup.pending, (state) => { 
-                state.status = 'loading'; 
+            .addCase(signup.pending, (state) => {
+                state.status = 'loading';
                 state.error = null;
             })
             .addCase(signup.fulfilled, (state, action) => {
@@ -64,13 +82,13 @@ const authSlice = createSlice({
                 localStorage.setItem('token', action.payload.token);
                 localStorage.setItem('username', action.payload.username);
             })
-            .addCase(signup.rejected, (state, action) => { 
+            .addCase(signup.rejected, (state, action) => {
                 state.status = 'failed';
-                state.error = action.payload; 
+                state.error = action.payload;
             })
-            .addCase(login.pending, (state) => { 
-                state.status = 'loading'; 
-                state.error = null; 
+            .addCase(login.pending, (state) => {
+                state.status = 'loading';
+                state.error = null;
             })
             .addCase(login.fulfilled, (state, action) => {
                 state.status = 'succeeded';
@@ -79,9 +97,9 @@ const authSlice = createSlice({
                 localStorage.setItem('token', action.payload.token);
                 localStorage.setItem('username', action.payload.username);
             })
-            .addCase(login.rejected, (state, action) => { 
-                state.status = 'failed'; 
-                state.error = action.payload; 
+            .addCase(login.rejected, (state, action) => {
+                state.status = 'failed';
+                state.error = action.payload;
             });
     },
 });
