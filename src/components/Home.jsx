@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSearchParams } from 'react-router'
 import { addToPastes, updateToPastes, fetchPastes } from '../redux/pasteSlice';
+import toast from 'react-hot-toast';
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -13,6 +14,8 @@ const Home = () => {
   const [isDirty, setIsDirty] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
   const [showGuide, setShowGuide] = useState(false);
+  const [showTitleModal, setShowTitleModal] = useState(false);
+  const [titleModalValue, setTitleModalValue] = useState('');
   const [searchParams, setSearchParams] = useSearchParams();
   const pasteId = searchParams.get("pasteId");
   const status = useSelector((state) => state.paste.status);
@@ -21,6 +24,16 @@ const Home = () => {
   useEffect(() => {
     dispatch(fetchPastes());
   }, [dispatch]);
+
+  useEffect(() => {
+    function handleBeforeUnload(e) {
+      if (isDirty) {
+        e.preventDefault();
+      }
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isDirty]);
 
   useEffect(() => {
     if (pasteId && allPastes.length && loadedPasteIdRef.current !== pasteId) {
@@ -46,15 +59,26 @@ const Home = () => {
     }
   }, [pasteId]);
 
+  // Combined autosave: creates the note on first content, updates it after that
   useEffect(() => {
-    if (!pasteId) return;
     if (!isDirty) return;
-    if (!title && !value) return;
+    if (!value.trim()) return;
 
     const timer = setTimeout(async () => {
-      const result = await dispatch(updateToPastes({ _id: pasteId, title, content: value, tags, silent: true }));
-      if (updateToPastes.fulfilled.match(result)) {
-        setLastSaved(new Date());
+      if (pasteId) {
+        const result = await dispatch(updateToPastes({ _id: pasteId, title, content: value, tags, silent: true }));
+        if (updateToPastes.fulfilled.match(result)) {
+          setLastSaved(new Date());
+          setIsDirty(false);
+        }
+      } else {
+        const result = await dispatch(addToPastes({ title, content: value, tags, silent: true }));
+        if (addToPastes.fulfilled.match(result)) {
+          loadedPasteIdRef.current = result.payload._id;
+          setSearchParams({ pasteId: result.payload._id });
+          setLastSaved(new Date());
+          setIsDirty(false);
+        }
       }
     }, 1500);
 
@@ -85,26 +109,54 @@ const Home = () => {
     setIsDirty(true);
   }
 
-  function createPaste() {
-    const paste = {
-      title: title,
-      content: value,
-      tags: tags,
-      _id: pasteId || Date.now().toString(36),
-      createdAt: new Date().toISOString(),
-    }
+  async function finalizeSave(finalTitle) {
+    const paste = { title: finalTitle, content: value, tags };
+    const result = pasteId
+      ? await dispatch(updateToPastes({ _id: pasteId, ...paste }))
+      : await dispatch(addToPastes(paste));
 
-    if (pasteId) {
-      dispatch(updateToPastes(paste));
-    }
-    else {
-      dispatch(addToPastes(paste));
+    const succeeded = pasteId
+      ? updateToPastes.fulfilled.match(result)
+      : addToPastes.fulfilled.match(result);
+
+    if (!succeeded) {
+      toast.error(result.payload || 'Failed to save note. Please try again.');
+      return false;
     }
 
     setTitle('');
     setValue('');
     setTags([]);
+    setLastSaved(null);
+    setIsDirty(false);
+    loadedPasteIdRef.current = null;
     setSearchParams({});
+    return true;
+  }
+
+  async function handleSaveAndClose() {
+    if (!value.trim()) {
+      toast.error('Content cannot be empty');
+      return;
+    }
+    if (!title.trim()) {
+      setTitleModalValue('');
+      setShowTitleModal(true);
+      return;
+    }
+    await finalizeSave(title);
+  }
+
+  async function handleTitleModalSubmit() {
+    const finalTitle = titleModalValue.trim();
+    if (!finalTitle) {
+      toast.error('Please enter a title');
+      return;
+    }
+    const success = await finalizeSave(finalTitle);
+    if (success) {
+      setShowTitleModal(false);
+    }
   }
 
   return (
@@ -123,9 +175,9 @@ const Home = () => {
 
         <button
           className='px-5 py-3 rounded-lg bg-brass hover:bg-brass-dark text-ink font-display font-medium transition-colors whitespace-nowrap'
-          onClick={createPaste}>
+          onClick={handleSaveAndClose}>
           {
-            pasteId ? "update note" : "create note"
+            pasteId ? "save and close" : "create and close"
           }
         </button>
 
@@ -209,8 +261,54 @@ const Home = () => {
           value={value}
           placeholder='enter content here'
           onChange={(e) => { setValue(e.target.value); setIsDirty(true); }}
+          autoCorrect='off'
+          autoCapitalize='off'
+          autoComplete='off'
+          spellCheck='false'
         />
       </div>
+
+      {showTitleModal && (
+        <div
+          className='fixed inset-0 bg-ink/80 flex items-center justify-center px-6 z-30'
+          onClick={() => setShowTitleModal(false)}
+        >
+          <div
+            className='bg-paper rounded-lg p-6 w-full max-w-md'
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className='font-display font-semibold text-ink text-lg'>Name this note</h4>
+            <p className='text-sm text-ink/70 mt-2'>
+              Your content is saved — just needs a title before closing.
+            </p>
+
+            <input
+              type='text'
+              autoFocus
+              placeholder='enter title here'
+              value={titleModalValue}
+              onChange={(e) => setTitleModalValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleTitleModalSubmit(); }}
+              className='w-full mt-4 px-3 py-2 rounded-lg bg-ink-soft text-paper text-sm border border-brass-dark/30 focus:border-brass focus:outline-none'
+            />
+
+            <div className='flex gap-3 mt-4'>
+              <button
+                onClick={handleTitleModalSubmit}
+                className='px-4 py-2 rounded-lg bg-brass hover:bg-brass-dark text-ink text-sm font-display font-medium'
+              >
+                Save title
+              </button>
+              <button
+                onClick={() => setShowTitleModal(false)}
+                className='px-4 py-2 rounded-lg text-ink/60 hover:text-ink text-sm font-display'
+              >
+                Keep writing
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
