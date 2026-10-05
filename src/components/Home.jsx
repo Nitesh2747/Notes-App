@@ -87,6 +87,16 @@ const Home = () => {
 
   function addCurrentTag() {
     const newTag = tagInput.trim().toLowerCase();
+    if (tags.length >= 20) {
+      toast.error('You can add up to 20 tags');
+      setTagInput('');
+      return;
+    }
+    if (newTag && newTag.length > 30) {
+      toast.error('Tag must be under 30 characters');
+      setTagInput('');
+      return;
+    }
     if (newTag && !tags.includes(newTag)) {
       setTags([...tags, newTag]);
       setIsDirty(true);
@@ -171,6 +181,7 @@ const Home = () => {
           placeholder='enter title here'
           value={title}
           onChange={(e) => { setTitle(e.target.value); setIsDirty(true); }}
+          maxLength={200}
         />
 
         <button
@@ -265,6 +276,7 @@ const Home = () => {
           autoCapitalize='off'
           autoComplete='off'
           spellCheck='false'
+          maxLength={50000}
         />
       </div>
 
